@@ -5,40 +5,45 @@ const dboper = require("./operations");
 const url = "mongodb://localhost:27017/";
 const dbname = "conFusion";
 
-MongoClient.connect(url, (err, client) => {
-  assert.equal(err, null);
+MongoClient.connect(url)
+  .then(client => {
+    console.log("Connected");
 
-  console.log("Connected");
+    const db = client.db(dbname);
+    const dish = { name: "vadonut", description: "pan raas" };
 
-  const db = client.db(dbname);
+    dboper
+      .insertDocument(db, dish, "dishes")
+      .then(res => {
+        console.log("Insert Document\n", res.ops);
 
-  dboper.insertDocument(
-    db,
-    { name: "vadonut", description: "pan raas" },
-    "dishes",
-    res => {
-      console.log("Insert Document\n", res.ops);
-      dboper.findDocuments(db, "dishes", docs => {
+        return dboper.findDocuments(db, "dishes");
+      })
+      .then(docs => {
         console.log("Found documents:\n", docs);
 
-        dboper.updateDocument(
+        return dboper.updateDocument(
           db,
           { name: "vadonut" },
           { description: "Pan masala" },
-          "dishes",
-          res => {
-            console.log("Updated Document: \n", res.result);
-            dboper.findDocuments(db, "dishes", docs => {
-              console.log("Found updated documents:\n", docs);
-
-              db.dropCollection("dishes", res => {
-                console.log("Dropped collection: ", res);
-                client.close();
-              });
-            });
-          }
+          "dishes"
         );
-      });
-    }
-  );
-});
+      })
+      .then(res => {
+        console.log("Updated Document: \n", res.result);
+
+        return dboper.findDocuments(db, "dishes");
+      })
+      .then(docs => {
+        console.log("Found updated documents:\n", docs);
+
+        return db.dropCollection("dishes");
+      })
+      .then(res => {
+        console.log("Dropped collection: ", res);
+
+        return client.close();
+      })
+      .catch(err => console.log(err));
+  })
+  .catch(err => console.log(err));
