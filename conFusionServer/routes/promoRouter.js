@@ -1,6 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-
+const authenticate = require("../authenticate");
 const Promitions = require("../models/promotions");
 
 const promoRouter = express.Router();
@@ -17,7 +17,7 @@ promoRouter
       })
       .catch(err => next(err));
   })
-  .post((req, res, next) => {
+  .post(authenticate.verifyUser, (req, res, next) => {
     Promitions.create(req.body)
       .then(promotion => {
         res.statusCode = 200;
@@ -26,11 +26,11 @@ promoRouter
       })
       .catch(err => next(err));
   })
-  .put((req, res, next) => {
+  .put(authenticate.verifyUser, (req, res, next) => {
     res.statusCode = 403;
     res.end("put not supported on /promotions");
   })
-  .delete((req, res, next) => {
+  .delete(authenticate.verifyUser, (req, res, next) => {
     Promitions.deleteMany({})
       .then(resp => {
         res.statusCode = 200;
@@ -51,11 +51,11 @@ promoRouter
       })
       .catch(err => next(err));
   })
-  .post((req, res, next) => {
+  .post(authenticate.verifyUser, (req, res, next) => {
     res.statusCode = 403;
     res.end(`post not supported on /promotions/${req.params.promoId}`);
   })
-  .put((req, res, next) => {
+  .put(authenticate.verifyUser, (req, res, next) => {
     Promitions.findByIdAndUpdate(
       req.params.promoId,
       {
@@ -70,7 +70,7 @@ promoRouter
       })
       .catch(err => next(err));
   })
-  .delete((req, res, next) => {
+  .delete(authenticate.verifyUser, (req, res, next) => {
     Promitions.findByIdAndRemove(req.params.promoId)
       .then(resp => {
         res.statusCode = 200;
